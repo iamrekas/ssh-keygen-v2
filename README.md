@@ -1,41 +1,42 @@
-ssh-keygen
-==========
+# ssh-keygen
 
 Generates a SSH key-pair
 
 ### Install
+
 1. Make sure you have ssh-keygen (try `$ ssh-keygen` if you aren't sure)
 2. npm package install
 
 ```
 npm install ssh-keygen
 ```
+
 OR download from github and place in ./node_modules
 
 ### Usage
 
-
-
 ```js
-var keygen = require('ssh-keygen');
-var fs = require('fs');
+var keygen = require("ssh-keygen");
+var fs = require("fs");
 
-var location = __dirname + '/foo_rsa';
-var comment = 'joe@foobar.com';
-var password = 'keypassword'; // false and undefined will convert to an empty pw
+var location = __dirname + "/foo_rsa";
+var comment = "joe@foobar.com";
+var password = "keypassword"; // false and undefined will convert to an empty pw
 
-keygen({
-  location: location,
-  comment: comment,
-	password: password,
-  read: true
-}, function(err, out){
-	if(err) return console.log('Something went wrong: '+err);
-	console.log('Keys created!');
-	console.log('private key: '+out.key);
-	console.log('public key: '+out.pubKey);
-});
-
+keygen(
+  {
+    location: location,
+    comment: comment,
+    password: password,
+    read: true
+  },
+  function(err, out) {
+    if (err) return console.log("Something went wrong: " + err);
+    console.log("Keys created!");
+    console.log("private key: " + out.key);
+    console.log("public key: " + out.pubKey);
+  }
+);
 ```
 
 The following shell command will get executed:
@@ -63,12 +64,14 @@ The key's randomart image is:
 
 ### Parameters
 
-* location, desired location for the key. The public key will be at the location + `.pub`, defaults temp dir
-* read, should the callback have the key files read into it, defaults true
-* force, destroy pre-existing files with the location name and the public key name, defaults true
-* destroy, destroy the key files once they have been read, defaults false
-* comment, the comment that should be embedded into the key, defaults empty
-* password, the password for the key, defaults empty
+- location, desired location for the key. The public key will be at the location + `.pub`, defaults temp dir
+- read, should the callback have the key files read into it, defaults true
+- force, destroy pre-existing files with the location name and the public key name, defaults true
+- destroy, destroy the key files once they have been read, defaults false
+- comment, the comment that should be embedded into the key, defaults empty
+- password, the password for the key, defaults empty
+- encryption, Supports all other encrytpions by default rsa
+- size , the bit size for the encryption, by default the recommended size for the encryption specified
 
 ### Note
 
@@ -84,6 +87,6 @@ This package bundles binaries for windows. The current version is: `2.4.4.2-rc3`
 
 ### Todo
 
-* Real tests
+- Real tests
 
 Contributors welcome!
