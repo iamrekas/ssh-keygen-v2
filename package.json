@@ -1,14 +1,14 @@
 {
-  "name": "ssh-keygen",
+  "name": "ssh-keygen-v2",
   "version": "0.4.2",
   "author": {
-    "name": "Eric Vicenti",
-    "url": "http://github.com/ericvicenti"
+    "name": "Rekas",
+    "url": "http://github.com/iamrekas"
   },
-  "homepage": "http://github.com/ericvicenti/ssh-keygen",
+  "homepage": "http://github.com/iamrekas/ssh-keygen-v2",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ericvicenti/ssh-keygen.git"
+    "url": "git://github.com/iamrekas/ssh-keygen-v2.git"
   },
   "engines": {
     "node": ">= 0.6.0"
@@ -21,7 +21,7 @@
     "public"
   ],
   "bugs": {
-    "url": "http://github.com/ericvicenti/ssh-keygen/issues"
+    "url": "http://github.com/iamrekas/ssh-keygen-v2/issues"
   },
   "main": "src/ssh-keygen",
   "description": "Generates SSH key-pairs",
@@ -31,7 +31,7 @@
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/ericvicenti/ssh-keygen/blob/master/LICENSE.md"
+      "url": "https://github.com/iamrekas/ssh-keygen-v2/blob/master/LICENSE.md"
     }
   ]
 }
