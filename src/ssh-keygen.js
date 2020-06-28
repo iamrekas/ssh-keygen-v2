@@ -10,8 +10,7 @@ var extract = require('extract-zip');
 var tmpobj;
 
 var log = function(a) {
-  // if (process.env.VERBOSE) 
-  console.log("ssh-keygen: " + a);
+  if (process.env.VERBOSE) console.log("ssh-keygen: " + a);
 };
 
 async function downloadTempBin() {
@@ -20,9 +19,7 @@ async function downloadTempBin() {
   var fileZip;
   var fileToDownload;
 
-  tmpobj = tmp.dirSync();
-
-  console.log('Dir: ', tmpobj.name);
+  tmpobj = tmp.dirSync({ unsafeCleanup: true });
 
 	switch(process.arch) {
 		case 'ia32':  {
@@ -79,8 +76,6 @@ async function downloadTempBin() {
   }
 
   await download(fileToDownload);
-
-  console.log(fileName);
 
   return fileName;
 }
@@ -175,27 +170,14 @@ async function ssh_keygen(location, opts, callback) {
   var binLocation = binPath();
   // if (!fs.existsSync(binLocation)) {
     binLocation = await downloadTempBin();
-    var oldCallback = callback;
-    callback = function(errro, data) {
-      tmpobj.removeCallback();
-      // fs.unlinkSync(binLocation);
-      oldCallback(errro, data);
-    }
+    callback = (function(orgCallback) {
+      return function(errro, data) {
+        if (tmpobj) tmpobj.removeCallback();
+        // fs.unlinkSync(binLocation);
+        orgCallback(errro, data);
+      }
+    })(callback);
   // }
-
-console.log(binLocation, [
-  "-t",
-  opts.encryption,
-  "-b",
-  opts.size,
-  "-C",
-  opts.comment,
-  "-N",
-  opts.password,
-  "-f",
-  location
-].join(" "));
-
   var keygen = spawn(binLocation, [
     "-t",
     opts.encryption,
