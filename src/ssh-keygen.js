@@ -44,14 +44,15 @@ async function downloadTempBin() {
         /* GZIP true for most of the websites now, disable it if you don't need it */
         gzip: false
     })
-    .pipe(file)
-    .on('finish', function () {
-        resolve();
+      .pipe(file);
+    file
+      .on('finish', function () {
+          resolve();
+      })
+      .on('error', function (error) {
+          reject(error);
+      })
     })
-    .on('error', function (error) {
-        reject(error);
-    })
-  })
 
   return fileName;
 }
