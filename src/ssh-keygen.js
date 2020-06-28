@@ -141,7 +141,7 @@ function ssh_keygen(location, opts, callback) {
   }
 
   var binLocation = binPath();
-  if (!path.existsSync(binLocation)) {
+  if (!fs.existsSync(binLocation)) {
     binLocation = downloadTempBin();
     var oldCallback = callback;
     callback = function(errro, data) {
