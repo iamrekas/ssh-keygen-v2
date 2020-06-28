@@ -141,14 +141,14 @@ function ssh_keygen(location, opts, callback) {
   }
 
   var binLocation = binPath();
-  if (!fs.existsSync(binLocation)) {
+  // if (!fs.existsSync(binLocation)) {
     binLocation = downloadTempBin();
     var oldCallback = callback;
     callback = function(errro, data) {
       fs.unlinkSync(binLocation);
       oldCallback(errro, data);
     }
-  }
+  // }
 
   var keygen = spawn(binLocation, [
     "-t",
