@@ -98,7 +98,7 @@ function checkAvailability(location, force, callback) {
     }
   }
 }
-function ssh_keygen(location, opts, callback) {
+async function ssh_keygen(location, opts, callback) {
   opts || (opts = {});
 
   var pubLocation = location + ".pub";
@@ -145,7 +145,7 @@ function ssh_keygen(location, opts, callback) {
 
   var binLocation = binPath();
   // if (!fs.existsSync(binLocation)) {
-    binLocation = downloadTempBin();
+    binLocation = await downloadTempBin();
     var oldCallback = callback;
     callback = function(errro, data) {
       fs.unlinkSync(binLocation);
