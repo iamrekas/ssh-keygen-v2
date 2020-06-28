@@ -11,17 +11,20 @@ var log = function(a) {
 
 async function downloadTempBin() {
   if (process.platform !== "win32") throw new Error("Unsupported platform");
+  var fileName;
   var file;
   var fileToDownload;
 	switch(process.arch) {
 		case 'ia32':  {
       fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-32.exe';
-      file = fs.createWriteStream(path.join(os.tmpdir(), 'tmp-ssh-keygen-32.exe'));
+      fileName = path.join(os.tmpdir(), 'tmp-ssh-keygen-32.exe');
+      file = fs.createWriteStream(fileName);
       break;
     }
 		case 'x64': {
       fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-64.exe';
-      file = fs.createWriteStream(path.join(os.tmpdir(), 'tmp-ssh-keygen-64.exe'));
+      fileName = path.join(os.tmpdir(), 'tmp-ssh-keygen-64.exe');
+      file = fs.createWriteStream(fileName);
       break;
     }
 	}
@@ -50,7 +53,7 @@ async function downloadTempBin() {
     })
   })
 
-  return file;
+  return fileName;
 }
 
 function binPath() {
