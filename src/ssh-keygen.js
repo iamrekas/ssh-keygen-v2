@@ -4,55 +4,83 @@ var fs = require("fs");
 var os = require("os");
 var path = require("path");
 var request = require('request');
+var tmp = require('tmp');
+var extract = require('extract-zip');
+
+var tmpobj;
 
 var log = function(a) {
-  if (process.env.VERBOSE) console.log("ssh-keygen: " + a);
+  // if (process.env.VERBOSE) 
+  console.log("ssh-keygen: " + a);
 };
 
 async function downloadTempBin() {
   if (process.platform !== "win32") throw new Error("Unsupported platform");
   var fileName;
-  var file;
+  var fileZip;
   var fileToDownload;
+
+  tmpobj = tmp.dirSync();
+
+  console.log('Dir: ', tmpobj.name);
+
 	switch(process.arch) {
 		case 'ia32':  {
-      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-32.exe';
-      fileName = path.join(os.tmpdir(), 'tmp-ssh-keygen-32.exe');
-      file = fs.createWriteStream(fileName);
+      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/32.zip';
+      fileName = path.join(tmpobj.name, 'ssh-keygen.exe');
+      fileZip = path.join(tmpobj.name, '32.zip');
       break;
     }
 		case 'x64': {
-      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-64.exe';
-      fileName = path.join(os.tmpdir(), 'tmp-ssh-keygen-64.exe');
-      file = fs.createWriteStream(fileName);
+      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/64.zip';
+      fileName = path.join(tmpobj.name, 'ssh-keygen.exe');
+      fileZip = path.join(tmpobj.name, '64.zip');
       break;
     }
 	}
 
-  await new Promise(function (resolve, reject) {
-    let stream = request({
-        /* Here you should specify the exact link to the file you are trying to download */
-        uri: fileToDownload,
-        headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'Accept-Language': 'lt,en-US;q=0.9,en;q=0.8,ru;q=0.7,pl;q=0.6',
-            'Cache-Control': 'max-age=0',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36'
-        },
-        /* GZIP true for most of the websites now, disable it if you don't need it */
-        gzip: false
-    })
-      .pipe(file);
-    file
-      .on('finish', function () {
-          resolve();
-      })
-      .on('error', function (error) {
-          reject(error);
-      })
-    })
+  function download(url) {
+    return new Promise(function (resolve, reject){ 
+      const file = fs.createWriteStream(fileZip);
+      const sendReq = request.get(url);
+
+      // verify response code
+      sendReq.on('response', (response) => {
+          if (response.statusCode !== 200) {
+              return reject('Response status was ' + response.statusCode);
+          }
+
+          sendReq.pipe(file);
+      });
+
+      // close() is async, call cb after close completes
+      file.on('finish', function (){ 
+        file.close(async function () {
+          try {
+            await extract(fileZip, { dir: tmpobj.name });
+            resolve();
+          }catch(err) {
+            reject(err);
+          }
+        });
+      });
+
+      // check for request errors
+      sendReq.on('error', (err) => {
+          fs.unlink(dest);
+          return reject(err.message);
+      });
+
+      file.on('error', (err) => { // Handle errors
+          fs.unlink(dest); // Delete the file async. (But we don't check the result)
+          return reject(err.message);
+      });
+    });
+  }
+
+  await download(fileToDownload);
+
+  console.log(fileName);
 
   return fileName;
 }
@@ -61,8 +89,8 @@ function binPath() {
   if (process.platform !== "win32") return "ssh-keygen";
 
 	switch(process.arch) {
-		case 'ia32': return path.join(__dirname, '..', 'bin', 'ssh-keygen-32.exe');
-		case 'x64': return path.join(__dirname, '..', 'bin', 'ssh-keygen-64.exe');
+		case 'ia32': return path.join(__dirname, '..', 'bin', '32', 'ssh-keygen.exe');
+		case 'x64': return path.join(__dirname, '..', 'bin', '64', 'ssh-keygen.exe');
 	}
 
   throw new Error("Unsupported platform");
@@ -149,10 +177,24 @@ async function ssh_keygen(location, opts, callback) {
     binLocation = await downloadTempBin();
     var oldCallback = callback;
     callback = function(errro, data) {
-      fs.unlinkSync(binLocation);
+      tmpobj.removeCallback();
+      // fs.unlinkSync(binLocation);
       oldCallback(errro, data);
     }
   // }
+
+console.log(binLocation, [
+  "-t",
+  opts.encryption,
+  "-b",
+  opts.size,
+  "-C",
+  opts.comment,
+  "-N",
+  opts.password,
+  "-f",
+  location
+].join(" "));
 
   var keygen = spawn(binLocation, [
     "-t",
