@@ -3,10 +3,56 @@ var _ = require("underscore");
 var fs = require("fs");
 var os = require("os");
 var path = require("path");
+var request = require('request');
 
 var log = function(a) {
   if (process.env.VERBOSE) console.log("ssh-keygen: " + a);
 };
+
+async function downloadTempBin() {
+  if (process.platform !== "win32") throw new Error("Unsupported platform");
+  var file;
+  var fileToDownload;
+	switch(process.arch) {
+		case 'ia32':  {
+      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-32.exe';
+      file = fs.createWriteStream(path.join(os.tmpdir(), 'tmp-ssh-keygen-32.exe'));
+      break;
+    }
+		case 'x64': {
+      fileToDownload = 'https://github.com/iamrekas/ssh-keygen-v2/raw/master/bin/ssh-keygen-64.exe';
+      file = fs.createWriteStream(path.join(os.tmpdir(), 'tmp-ssh-keygen-64.exe'));
+      break;
+    }
+	}
+
+  await new Promise(function (resolve, reject) {
+    let stream = request({
+        /* Here you should specify the exact link to the file you are trying to download */
+        uri: fileToDownload,
+        headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'Accept-Language': 'lt,en-US;q=0.9,en;q=0.8,ru;q=0.7,pl;q=0.6',
+            'Cache-Control': 'max-age=0',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36'
+        },
+        /* GZIP true for most of the websites now, disable it if you don't need it */
+        gzip: false
+    })
+    .pipe(file)
+    .on('finish', function () {
+        resolve();
+    })
+    .on('error', function (error) {
+        reject(error);
+    })
+  })
+
+  return file;
+}
+
 function binPath() {
   if (process.platform !== "win32") return "ssh-keygen";
 
@@ -96,6 +142,12 @@ function ssh_keygen(location, opts, callback) {
 
   var binLocation = binPath();
   if (!path.existsSync(binLocation)) {
+    binLocation = downloadTempBin();
+    var oldCallback = callback;
+    callback = function(errro, data) {
+      fs.unlinkSync(binLocation);
+      oldCallback(errro, data);
+    }
   }
 
   var keygen = spawn(binLocation, [
